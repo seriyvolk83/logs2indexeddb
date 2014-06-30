@@ -1,0 +1,173 @@
+<html>
+    <head>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script language="javascript">
+            var database;
+            var startTime = null;
+            var totalNumberOfWrites = null;
+            function startIndexedDBTest(n) {
+                openDb(n);
+            }
+            /**
+             * Opens database and updates schema
+             */
+            function openDb(n) {
+                console.log("openDb ...");
+                // Let us open our database
+                var request = indexedDB.open("MyTestDatabase", 2);
+                request.onerror = function(event) {
+                    alert("Why didn't you allow my web app to use IndexedDB?!");
+                    console.error("openDb:", event.target.errorCode);
+                };
+                request.onsuccess = function(event) {
+                    database = request.result;
+                    console.log("openDb DONE");
+                    database.onerror = function(event) {
+                        // Generic error handler for all errors targeted at this database's
+                        // requests!
+                        alert("Database error: " + event.target.errorCode);
+                    };
+                    processWriteTest(database,n);
+                };
+                // This event is only implemented in recent browsers
+                request.onupgradeneeded = function(event) {
+                    console.log("openDb.onupgradeneeded");
+                    var db = event.target.result;
+
+                    // Create an objectStore to hold information about our customers. We're
+                    // going to use "ssn" as our key path because it's guaranteed to be
+                    // unique.
+                    var objectStore = db.createObjectStore("customers", { keyPath: "ssn" });
+
+                    // Create an index to search customers by name. We may have duplicates
+                    // so we can't use a unique index.
+                    objectStore.createIndex("name", "name", { unique: false });
+
+                    // Create an index to search customers by email. We want to ensure that
+                    // no two customers have the same email, so use a unique index.
+                    objectStore.createIndex("email", "email", { unique: true });
+
+                    // Use transaction oncomplete to make sure the objectStore creation is
+                    // finished before adding data into it.
+                    // objectStore.transaction is a reference to the current transaction
+                    objectStore.transaction.oncomplete = function(event) {
+                        // Store values in the newly created objectStore.
+                        console.log("openDb.onupgradeneeded.transaction.oncomplete");
+                    }
+                };
+            }
+            function processWriteTest(db, n) {
+                console.log("processWriteTest");
+
+                status('Connected to database. Preparing to process '+n+" writes.");
+                alert("The test can take a lot of time (1-2 minutes). The browser can be locked duting the test. Ready to launch?");
+                status("Testing... Please wait until test will be finished.");
+
+                totalNumberOfWrites = n;
+                startTime = new Date();
+                for( var i = 0; i < n; i++ ) {
+//                    status("Writing "+i+" record...");                          // Comment this to get real time estimate
+                    processWrite(db, i);
+                }
+                // The write will be finished after last callback
+            }
+
+            function testFinished() {
+                console.log("testFinished");
+                var n = totalNumberOfWrites;
+                var end = new Date();
+                var diff = end.getMinutes() * 60 + end.getSeconds() - (startTime.getMinutes() * 60 + startTime.getSeconds());
+                var mean = diff / n;
+
+                alert("Done. Check the result on the page.");
+                status("One write request takes <b>"+mean+"</b> seconds.<br>Test time: "+diff+" seconds");
+            }
+            function processWrite(db, i) {
+//                console.log("processWrite");
+                var transaction = db.transaction(["customers"], "readwrite");
+
+                // Do something when all the data is added to the database.
+                transaction.oncomplete = function(event) {
+//                    console.log("processWrite.transaction.oncomplete");
+                };
+
+                transaction.onerror = function(event) {
+                    // Don't forget to handle errors!
+//                    console.error("processWrite.transaction.onerror: "+event.code);
+                };
+
+                var objectStore = transaction.objectStore("customers");
+
+                var data = { ssn: i, name: "Bill", age: 35, email: "mail"+i+"@rtlservice.com" }
+                var request = objectStore.put(data);
+                request.onsuccess = function(event) {
+                    // event.target.result == customerData[i].ssn;
+//                    console.log("processWrite.transaction...onsuccess: "+event.target.result);
+                    if( i == totalNumberOfWrites-1) {
+                        testFinished();
+                    }
+                };
+                request.onerror = function() {
+                    console.error("addPublication error", this.error);
+                }
+            }
+            function red(str) {
+                return '<span style="color: red;">'+str+'</span>';
+            }
+            function status(str) {
+                $('#status').html(str);
+            }
+            function getDateTime() {
+                var now     = new Date();
+                var year    = now.getFullYear();
+                var month   = now.getMonth()+1;
+                var day     = now.getDate();
+                var hour    = now.getHours();
+                var minute  = now.getMinutes();
+                var second  = now.getSeconds();
+                if(month.toString().length == 1) {
+                    var month = '0'+month;
+                }
+                if(day.toString().length == 1) {
+                    var day = '0'+day;
+                }
+                if(hour.toString().length == 1) {
+                    var hour = '0'+hour;
+                }
+                if(minute.toString().length == 1) {
+                    var minute = '0'+minute;
+                }
+                if(second.toString().length == 1) {
+                    var second = '0'+second;
+                }
+                var dateTime = year+'/'+month+'/'+day+' '+hour+':'+minute+':'+second;
+                return dateTime;
+            }
+            // Extended example from https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB
+            $(function() {
+                // In the following line, you should include the prefixes of implementations you want to test.
+                window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+                // DON'T use "var indexedDB = ..." if you're not in a function.
+                // Moreover, you may need references to some window.IDB* objects:
+                window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+                window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+                // (Mozilla has never prefixed these objects, so we don't need window.mozIDB*)
+
+                if (!window.indexedDB) {
+                    window.alert("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.");
+                    $('#status').html(red("Error: Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available."));
+                }
+                else {
+                    status('Testing...');
+                    startIndexedDBTest(10000);
+                }
+            });
+
+        </script>
+    </head>
+    <body>
+        <h1>IndexedDB performance test</h1>
+        <p><i>This test records a log of data in IndexedDB and counts how much time one write request takes in a mean.</i></p>
+        <p id="status" style="color: blue;">Initialization...</p>
+    </body>
+</html>

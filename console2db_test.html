@@ -1,0 +1,32 @@
+<html>
+    <head>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script language="javascript" src="logs2indexeddb.js"></script>
+        <script language="javascript">
+            // Extended example from https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB
+            $(function () {
+                // Init and start saving console logs into IndexedDB
+                l2i.init(function() {// successfully initialized
+                    l2i.on(function() {
+                        console.log('one');
+                        console.log('two');
+                        console.log('three');
+                        console.log('444');
+                    });
+                });
+
+                // Clear the database
+//                l2i.init(function(){l2i.on(function(){l2i.clear();});});
+            });
+        </script>
+    </head>
+    <body>
+        <h1>Logs2indexeddb test</h1>
+        <p>This test turns on l2i (logs2indexeddb) utility and write a few messages like<br>
+        <code>one<br>
+            two<br>
+            three</code><br> using <code>console.log()</code> method. <br>
+        You can check that there are messages in common console window and also in IndexedDB database named <code>logs2indexeddb</code> (open Resources tab in Javascript Console window and check that in IndexedDB -> logs2indexeddb -> logs->).</p>
+
+    </body>
+</html>

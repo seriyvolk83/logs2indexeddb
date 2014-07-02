@@ -7,5 +7,20 @@ This utility is a good choise for developers that need to analyze web client log
 
 ==============
 Version 0.0.1
-The first version contains only a sample html page that tests IndexedDB database performance.
-Next time I will commit ready to use utility that catches all you write to console.* methods and stores in local database. There will be methods that allow you to request console logs.
+
+Example:
+
+    l2i.init(function() {// successfully initialized
+        l2i.on(function() {
+            console.log('one');
+            console.log('two');
+            console.log('three');
+            console.log('444');
+        });
+    });
+    ...
+    console.log('5');
+    console.log('6');
+    ...
+
+Open console2db_test.html and look through the code and comments on the page. Also look into Javascript Console of errors occur.

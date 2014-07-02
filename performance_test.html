@@ -1,0 +1,22 @@
+<html>
+    <head>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script language="javascript" src="logs2indexeddb.js"></script>
+        <script language="javascript">
+            // Extended example from https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB
+            $(function () {
+                l2i.init(function() {// successfully initialized
+                    l2i.debug.startIndexedDBTest(5000, 'status');
+                }, function() {// error
+                    window.alert("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.");
+                    l2i.debug.status.html("<span style='color: red;>Error: Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.</span>");
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <h1>IndexedDB performance test</h1>
+        <p><i>This test records a log of data in IndexedDB and counts how much time one write request takes in a mean.</i></p>
+        <p id="status" style="color: blue;">Initialization...</p>
+    </body>
+</html>

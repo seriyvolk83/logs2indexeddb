@@ -5,10 +5,10 @@
         <script language="javascript">
             // Extended example from https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB
             $(function () {
-                // Init and start saving console logs into IndexedDB
+//                Init and start saving console logs into IndexedDB
                 l2i.init(function() {// successfully initialized
                     l2i.on(function() {
-                        console.log('one');
+                        console.log('one one');
                         console.log('two');
                         console.log('three');
                         console.log('444');
@@ -17,6 +17,11 @@
 
                 // Clear the database
 //                l2i.init(function(){l2i.on(function(){l2i.clear();});});
+
+                // Download a file with logs saved in IndexedDB
+                $('#download').click(function(){
+                    l2i.download();
+                });
             });
         </script>
     </head>
@@ -28,5 +33,8 @@
             three</code><br> using <code>console.log()</code> method. <br>
         You can check that there are messages in common console window and also in IndexedDB database named <code>logs2indexeddb</code> (open Resources tab in Javascript Console window and check that in IndexedDB -> logs2indexeddb -> logs->).</p>
 
+        <br>
+        <br>
+        <a href="#" id="download">Download file with logs from database</a>
     </body>
 </html>

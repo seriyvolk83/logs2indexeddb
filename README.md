@@ -24,3 +24,9 @@ Example:
     ...
 
 Open console2db_test.html and look through the code and comments on the page. Also look into Javascript Console of errors occur.
+
+To download a file with all logs from database:
+
+    l2i.download();
+
+You can invoke it right from Javascript Console or attach to buttom click event handler.

@@ -89,7 +89,7 @@ var l2i = {
             var cursor = event.target.result;
             if (cursor) {
                 // cursor.key + "=" + cursor.value
-                var request = db.transaction(["logs"], "readwrite").objectStore("logs").delete(cursor.key);
+                var request = l2i.database.transaction(["logs"], "readwrite").objectStore("logs").delete(cursor.key);
                 request.onsuccess = function(event) {
                     // It's gone!
                 };
@@ -100,8 +100,45 @@ var l2i = {
             }
         };
     },
-    clearAndDrop: function() {
+    /**
+     * Opens a file with logs
+     */
+    download: function() {
+        var objectStore = l2i.database.transaction("logs").objectStore("logs");
 
+        var data = '';
+        objectStore.openCursor().onsuccess = function(event) {
+            var cursor = event.target.result;
+            if (cursor) {
+                var v = cursor.value;
+                data += v.time+" "+ v.label+" "+ v.log+"\n";
+                cursor.continue();
+            }
+            else {
+                l2i.downloadFile(data);
+            }
+        };
+    },
+    downloadFile: function(data){
+        if(!data) {
+            l2i.consoles.original.log("l2i.download: Empty database");
+            return;
+        }
+        var filename = 'console.log'
+
+        var blob = new Blob([data], {type: 'text/plain'}),
+            e    = document.createEvent('MouseEvents'),
+            a    = document.createElement('a')
+
+        a.download = filename
+        a.href = window.URL.createObjectURL(blob)
+        a.dataset.downloadurl =  ['text/plain', a.download, a.href].join(':')
+        e.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+        a.dispatchEvent(e)
+    },
+    clearAndDrop: function() {
+        l2i.clear();
+        // todo replace with database drop
     },
     consoles: {
         originalIsOn: false,
@@ -155,7 +192,7 @@ var l2i = {
             },
             write2db: function(label, str) {
                 var data = {
-                    time: new Date(),
+                    time: new Date()+'',
                     label: label,
                     log: str
                 };

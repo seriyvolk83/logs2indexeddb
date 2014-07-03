@@ -165,6 +165,10 @@ var l2i = {
             info: function(str) {
                 l2i.consoles.original.info(str);
                 l2i.consoles.indexeddb.info(str);
+            },
+            debug: function(str) {
+                l2i.consoles.original.debug(str);
+                l2i.consoles.indexeddb.debug(str);
             }
         },
         /**
@@ -189,6 +193,9 @@ var l2i = {
             },
             info: function(str) {
                 l2i.consoles.indexeddb.write2db('info', str);
+            },
+            debug: function(str) {
+                l2i.consoles.indexeddb.write2db('debug', str);
             },
             write2db: function(label, str) {
                 var data = {

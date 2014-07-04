@@ -58,13 +58,11 @@ var l2i = {
         if( l2i.consoles.originalIsOn === false ) {
             l2i.consoles.originalIsOn = true;
             if( l2i.database != null ) {
-                console = l2i.consoles.both;
-                if( callback ) callback();
+                l2i.replaceConsoleThenOn(callback);
             }
             else {
                 l2i.openDb(l2i.databaseName, function() {
-                    console = l2i.consoles.both;
-                    if( callback ) callback();
+                    l2i.replaceConsoleThenOn(callback);
                 });
             }
         }
@@ -101,9 +99,28 @@ var l2i = {
         };
     },
     /**
-     * Opens a file with logs
+     * Opens a file with logs.
+     * If parameters are null (not specified) then method downloads all logs from database.
+     * If parameters are specified, then the method filters logs and provide only records
+     * that were created since fromDate to toDate.
+     * @param fromDate (optional)
+     * @param toDate (optional)
      */
-    download: function() {
+    download: function(fromDate, toDate) {
+        var fromTime = null;
+        var toTime = null;
+        if(fromDate != null) {
+            if(toDate != null) {
+                if(typeof(fromDate.getTime) === "undefined" || typeof(toDate.getTime) === "undefined" ) {
+                    throw "IllegalArgumentException: parameters must be Date objects";
+                }
+                fromTime = fromDate.getTime();
+                toTime = toDate.getTime();
+            }
+            else {
+                throw "IllegalArgumentException: Please provide either both parameters or none of them";
+            }
+        }
         var objectStore = l2i.database.transaction("logs").objectStore("logs");
 
         var data = '';
@@ -111,7 +128,9 @@ var l2i = {
             var cursor = event.target.result;
             if (cursor) {
                 var v = cursor.value;
-                data += v.time+" "+ v.label+" "+ v.log+"\n";
+                if( fromTime == null || fromTime <= v.time && v.time <= toTime) {
+                    data += new Date(v.time*1)+" "+ v.label+" "+ v.log+"\n";
+                }
                 cursor.continue();
             }
             else {
@@ -119,6 +138,17 @@ var l2i = {
             }
         };
     },
+    downloadToday: function() {
+        var start = new Date();
+        start.setHours(0,0,0,0);
+
+        var end = new Date();
+        end.setHours(23,59,59,999);
+        l2i.download(start, end);
+    },
+    /**
+     * @private
+     */
     downloadFile: function(data){
         if(!data) {
             l2i.consoles.original.log("l2i.download: Empty database");
@@ -198,8 +228,10 @@ var l2i = {
                 l2i.consoles.indexeddb.write2db('debug', str);
             },
             write2db: function(label, str) {
+                var time = new Date();
+                time.setMonth(time.getMonth()-1);
                 var data = {
-                    time: new Date()+'',
+                    time: time.getTime()+'',
                     label: label,
                     log: str
                 };
@@ -207,7 +239,37 @@ var l2i = {
             }
         }
     },
-
+    exceptions: {
+        uncatchable: {
+            on: function() {
+                if( l2i.isOn() ) {
+                    window.onerror = l2i.exceptions.uncatchable.onerror.both;
+                }
+                else {
+                    l2i.consoles.original.warn("l2i needs to be on to start catch uncatchable exceptions");
+                }
+            },
+            off: function() {
+                window.onerror = l2i.exceptions.uncatchable.onerror.original;
+            },
+            onerror: {
+                original: window.onerror,
+                /**
+                 * Logs exception into the database
+                 */
+                custom: function (errorMsg, url, lineNumber) {
+                    l2i.consoles.indexeddb.error(errorMsg+" "+url+" line:"+lineNumber);
+                    return false;
+                },
+                both: function (errorMsg, url, lineNumber) {
+                    l2i.exceptions.uncatchable.onerror.custom("UNCATCHABLE: ----------------"+errorMsg, url, lineNumber);
+                    if( l2i.exceptions.uncatchable.onerror.original ) {
+                        l2i.exceptions.uncatchable.onerror.original(errorMsg, url, lineNumber);
+                    }
+                }
+            }
+        }
+    },
     /**
      * @private Opens database and updates schema if needed.
      * @param dbName database name
@@ -247,6 +309,14 @@ var l2i = {
                 l2i.consoles.original.log("openDb.onupgradeneeded.transaction.oncomplete");
             }
         };
+    },
+    /**
+     * @private
+     */
+    replaceConsoleThenOn: function(callback) {
+        console = l2i.consoles.both;
+        l2i.exceptions.uncatchable.on();
+        if( callback ) callback();
     },
     /**
      * Performance test methods.

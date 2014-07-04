@@ -28,14 +28,30 @@ Open console2db_test.html and look through the code and comments on the page. Al
 
 ==============
 Check logs after a while:
+
 To download a file with all logs from the database:
 
     l2i.download();
 
-You can invoke it right from Javascript Console or attach to a buttom click event handler.
+To download a file with logs created today:
+
+    l2i.downloadToday();
+
+To download logs for the given period use:
+
+    l2i.download(fromDate, toDate);
+
+You can invoke it right from Javascript Console or attach to a button click event handler.
 
 
 ==============
 To clear old logs in the database:
 
     l2i.clear();
+
+==============
+Uncatchable exceptions
+
+l2i catches all uncatchable exceptions then on. However, you can turn this off if you needs only clear logs (produced using console.* methods):
+
+    l2i.exceptions.uncatchable.off();

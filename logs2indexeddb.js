@@ -176,29 +176,50 @@ var l2i = {
          * @private Logs into both - console and indexeddb
          */
         both: {
-            log: function(str) {
-                l2i.consoles.original.log(str);
-                l2i.consoles.indexeddb.log(str);
+            build_string: function(/* ... printf-like arguments ... */){
+              if (arguments.length == 0)
+                return;
+              var i = 0;
+              var strings = [];
+              var tokens = arguments[0].split("%s"); // we only handle %s
+              if (tokens.length > 1) {
+                var merged = [];
+                for (var l=tokens.length-1; i < l; i++){
+                  merged.push(tokens[i] || "");
+                  merged.push(arguments[1+i]);
+                }
+                merged.push(tokens[i]);
+                strings.push([merged.join("")]);
+                i++;
+              }
+              for (var l = arguments.length; i < l; i++){
+                strings.push(arguments[i]);
+              }
+              return strings.join(" ");
             },
-            warn: function(str) {
-                l2i.consoles.original.warn(str);
-                l2i.consoles.indexeddb.warn(str);
+            log: function() {
+                l2i.consoles.original.log.apply(l2i.consoles.original,arguments);
+                l2i.consoles.indexeddb.log(this.build_string.apply(this,arguments));
             },
-            trace: function(str) {
-                l2i.consoles.original.trace(str);
-                l2i.consoles.indexeddb.trace(str);
+            warn: function() {
+                l2i.consoles.original.warn.apply(l2i.consoles.original,arguments);
+                l2i.consoles.indexeddb.warn(this.build_string.apply(this,arguments));
             },
-            error: function(str) {
-                l2i.consoles.original.error(str);
-                l2i.consoles.indexeddb.error(str);
+            trace: function() {
+                l2i.consoles.original.trace.apply(l2i.consoles.original,arguments);
+                l2i.consoles.indexeddb.trace(this.build_string.apply(this,arguments));
             },
-            info: function(str) {
-                l2i.consoles.original.info(str);
-                l2i.consoles.indexeddb.info(str);
+            error: function() {
+                l2i.consoles.original.error.apply(l2i.consoles.original,arguments);
+                l2i.consoles.indexeddb.error(this.build_string.apply(this,arguments));
             },
-            debug: function(str) {
-                l2i.consoles.original.debug(str);
-                l2i.consoles.indexeddb.debug(str);
+            info: function() {
+                l2i.consoles.original.info.apply(l2i.consoles.original,arguments);
+                l2i.consoles.indexeddb.info(this.build_string.apply(this,arguments));
+            },
+            debug: function() {
+                l2i.consoles.original.debug.apply(l2i.consoles.original,arguments);
+                l2i.consoles.indexeddb.debug(this.build_string.apply(this,arguments));
             }
         },
         /**
